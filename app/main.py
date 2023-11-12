@@ -1,8 +1,10 @@
 import socket
+import re
 
-OK_HTTP_RESPONSE = "HTTP/1.1 200 OK\r\n\r\n"
-NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found\r\n\r\n"
-
+CRLF = "\r\n"
+OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
+NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
+CONTENT_TYPE_TEXT = "Content-type: text/plain"
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -18,12 +20,13 @@ def main():
     client_socket.close()
 
 def parse_request_path(decoded_request_str: str) -> str:
-    lines = decoded_request_str.split('\r\n')
-    line_one_array = lines[0].split(' ')
-    path = line_one_array[1]
+    lines = decoded_request_str.split(CRLF)
+    http_verb, path, protocol = lines[0].split(' ')
 
-    if path == '/':
-        return OK_HTTP_RESPONSE
+    parsed_path = re.math("/echo/w+", path)
+    print(parsed_path)
+    if parsed_path:
+        return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.split('/')[-1]
     else:
         return NOT_FOUND_HTTP_RESPONSE
 
