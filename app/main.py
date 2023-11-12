@@ -20,7 +20,7 @@ def main():
 def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split('\r\n')
     line_one_array = lines[0].split(' ')
-    path = line_one_array[2]
+    path = line_one_array[1]
 
     if path == '/':
         return OK_HTTP_RESPONSE
