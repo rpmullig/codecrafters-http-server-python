@@ -24,8 +24,10 @@ def parse_request_path(decoded_request_str: str) -> str:
     http_verb, path, protocol = lines[0].split(' ')
 
     parsed_path = re.match("/", path)
-    print(parsed_path)
+    print(parsed_path.match)
     if parsed_path:
+        if parsed_path.match == '/':
+            return OK_HTTP_RESPONSE
         return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.split('/')[-1]
     else:
         return NOT_FOUND_HTTP_RESPONSE
