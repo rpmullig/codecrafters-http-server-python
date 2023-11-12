@@ -51,8 +51,8 @@ def parse_request_path(decoded_request_str: str) -> str:
 def parse_headers(request_lines: str) -> dict:
     i: int = 2
     headers = dict()
-    while request_lines[i] != CRLF:
-        key, value = request_lines[i].split(':')
+    while i < len(request_lines) and request_lines[i] != '':
+        key, value = re.split(r':', request_lines[i])
         headers[key] = value
         i += 1
     return headers
