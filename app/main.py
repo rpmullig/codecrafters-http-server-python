@@ -5,7 +5,7 @@ CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
 NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
 CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
-CONTENT_LENGTH_HEADER = "Content-length: " 
+CONTENT_LENGTH_HEADER = "Content-Length: " 
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -23,9 +23,17 @@ def main():
 def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
+    headers = parse_headers(lines)
 
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
+
+    if path == "/user-agent":
+        response_body = headers["User-Agent"]     
+        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
+                            f'Content-Length: {len(response_body)}', str(), str()]
+ 
+        return CRLF.join(response_headers) + response_body 
 
     parsed_path = re.match("\/(echo\/(.+))?", path)
     print(f'Parsed path group: {parsed_path.group(0)}')
@@ -35,10 +43,20 @@ def parse_request_path(decoded_request_str: str) -> str:
         path_end = parsed_path.group(2)
         response_body = parsed_path.group(2) 
         response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
-                            f'Content-length: {len(path_end)}', str(), str()]
+                            f'Content-Length: {len(response_body)}', str(), str()]
         return CRLF.join(response_headers) + response_body 
 
     return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
+
+def parse_headers(request_lines: str) -> dict:
+    i: int = 2
+    headers = dict()
+    while request_lines[i] != CRLF:
+        key, value = request_lines[i].split(':')
+        headers[key] = value
+        i += 1
+    return headers
+
 
 if __name__ == "__main__":
     main()
