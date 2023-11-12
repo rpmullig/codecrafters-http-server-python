@@ -24,12 +24,14 @@ def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
     headers = parse_headers(lines)
+    print("Headers: ", headers) 
 
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
 
     if path == "/user-agent":
         response_body = headers["User-Agent"]     
+        print("User agent found to be: ", headers["User-Agent"]) 
         response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
                             f'Content-Length: {len(response_body)}', str(), str()]
  
