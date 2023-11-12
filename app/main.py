@@ -34,7 +34,7 @@ def parse_request_path(decoded_request_str: str) -> str:
         print(f"Prased Path capture group return: {parsed_path.group(2)}")
         path_end = parsed_path.group(2)
         response = OK_HTTP_RESPONSE + CRLF 
-        response += CONTENT_TYPE_TEXT + CRLF
+        response += CONTENT_TYPE_TEXT_HEADER + CRLF
         response += CONTENT_LENGTH_HEADER + len(path_end) + CRLF
         response += CRLF + parsed_path.group(2) # Body
         return response
