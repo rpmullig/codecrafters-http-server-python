@@ -23,7 +23,7 @@ def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
 
-    parsed_path = re.math("/echo/w+", path)
+    parsed_path = re.match("/echo/w+", path)
     print(parsed_path)
     if parsed_path:
         return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.split('/')[-1]
