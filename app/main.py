@@ -4,7 +4,8 @@ import re
 CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
 NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
-CONTENT_TYPE_TEXT = "Content-type: text/plain"
+CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
+CONTENT_LENGTH_HEADER = "Content-length: " 
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -31,7 +32,12 @@ def parse_request_path(decoded_request_str: str) -> str:
 
     if parsed_path.group(2):
         print(f"Prased Path capture group return: {parsed_path.group(2)}")
-        return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.group(2)
+        path_end = parsed_path.group(2)
+        response = OK_HTTP_RESPONSE + CRLF 
+        response += CONTENT_TYPE_TEXT + CRLF
+        response += CONTENT_LENGTH_HEADER + len(path_end) + CRLF
+        response += CRLF + parsed_path.group(2) # Body
+        return response
 
     return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
 
