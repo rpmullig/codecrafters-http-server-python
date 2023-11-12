@@ -27,7 +27,7 @@ def parse_request_path(decoded_request_str: str) -> str:
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
 
-    parsed_path = re.match("\/(echo\/(\w+))?", path)
+    parsed_path = re.match("\/(echo\/(*))?", path)
     print(f'Parsed path group: {parsed_path.group(0)}')
 
     if parsed_path.group(2):
