@@ -23,15 +23,14 @@ def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
 
-    parsed_path = re.match("\/(echo\/(\w+))?", path)
-    print(parsed_path.group(0))
-
-    if parsed_path.group(0) == "/":
+    if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
-    print("Parsed path reached.")
+
+    parsed_path = re.match("\/(echo\/(\w+))?", path)
+    print(f'Parsed path group: {parsed_path.group(0)}')
 
     if parsed_path.group(2):
-        print("Prased Path capture group return.")
+        print(f"Prased Path capture group return: {parsed_path.group(2)}")
         return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.group(2)
 
     return NOT_FOUND_HTTP_RESPONSE
