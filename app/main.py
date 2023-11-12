@@ -35,7 +35,8 @@ def parse_request_path(decoded_request_str: str) -> str:
         path_end = parsed_path.group(2)
         response_body = parsed_path.group(2) 
         response_list = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
-                            f"Content-length : {len(path_end)}", CRLF, response_body]
+                            f'Content-length : {len(path_end)}', CRLF, response_body]
+        print("Response: ", response_list) 
         return CRLF.join(response_list)  
 
     return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
