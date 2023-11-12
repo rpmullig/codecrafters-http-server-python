@@ -13,7 +13,7 @@ def main():
 
     while True:
         client_socket, address = server_socket.accept() 
-        Thread(target=server_thread, args=(client_socket)).start() 
+        Thread(target=server_thread, args=(client_socket,)).start() 
 
 
 def server_thread(client_socket):
