@@ -1,5 +1,6 @@
 import socket
 import re
+from threading import Thread
 
 CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
@@ -8,17 +9,20 @@ CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
 CONTENT_LENGTH_HEADER = "Content-Length: " 
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    client_socket, address = server_socket.accept() # wait for client
 
+    while true:
+        client_socket, address = server_socket.accept() 
+        Thread(target=server_thread, args=(client_socket)).start() 
+
+
+def server_thread(client_socket):
     request = client_socket.recv(1024)
     http_response = parse_request_path(request.decode())
-
     client_socket.sendall(http_response.encode())
     client_socket.close()
+
+
 
 def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
