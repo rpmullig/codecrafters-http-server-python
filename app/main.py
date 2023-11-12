@@ -33,7 +33,7 @@ def parse_request_path(decoded_request_str: str) -> str:
         print(f"Prased Path capture group return: {parsed_path.group(2)}")
         return OK_HTTP_RESPONSE + CRLF + CONTENT_TYPE_TEXT + CRLF + CRLF + parsed_path.group(2)
 
-    return NOT_FOUND_HTTP_RESPONSE
+    return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
 
 if __name__ == "__main__":
     main()
