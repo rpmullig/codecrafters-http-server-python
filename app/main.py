@@ -54,7 +54,7 @@ def parse_headers(request_lines: str) -> dict:
     i: int = 2
     headers = dict()
     while i < len(request_lines) and request_lines[i] != '':
-        key, value = re.split(r':', request_lines[i])
+        key, value = re.split(r':\s', request_lines[i])
         headers[key] = value
         i += 1
     return headers
