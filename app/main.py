@@ -33,11 +33,10 @@ def parse_request_path(decoded_request_str: str) -> str:
     if parsed_path.group(2):
         print(f"Prased Path capture group return: {parsed_path.group(2)}")
         path_end = parsed_path.group(2)
-        response = OK_HTTP_RESPONSE + CRLF 
-        response += CONTENT_TYPE_TEXT_HEADER + CRLF
-        response += CONTENT_LENGTH_HEADER + str(len(path_end)) + CRLF
-        response += CRLF + parsed_path.group(2) # Body
-        return response
+        response_body = parsed_path.group(2) 
+        response_list = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
+                            f"Content-length : {len(path_end)}", CRLF, response_body]
+        return CRLF.join(response_list)  
 
     return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
 
