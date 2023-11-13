@@ -1,6 +1,7 @@
 import socket
 import re
 from threading import Thread
+import argparse
 
 CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
@@ -65,4 +66,9 @@ def parse_headers(request_lines: str) -> dict:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--directory', type=str)
+    args = parser.parse_args()
+    print("Below are args")
+    print(args)
     main()
