@@ -71,5 +71,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("Below are args")
     print(args)
-    print(args["--directory"])
+    print(args["directory"])
     main()
