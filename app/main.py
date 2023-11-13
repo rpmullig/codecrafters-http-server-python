@@ -52,6 +52,8 @@ def parse_request_path(decoded_request_str: str) -> str:
 
     if parsed_echo_path.group(2):
         print(f"Prased Path capture group return: {parsed_echo_path.group(2)}")
+        if not os.path.exists(dir + parsed_echo_path.group(2)):
+            return CRLF.join(NOT_FOUND_HTTP_RESPONSE, str())
         response_body = parsed_echo_path.group(2)
         response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
                             f'Content-Length: {len(response_body)}', str(), str()]
