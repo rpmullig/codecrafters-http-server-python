@@ -2,6 +2,7 @@ import socket
 import re
 from threading import Thread
 import argparse
+import os
 
 CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
