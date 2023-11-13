@@ -80,7 +80,7 @@ def parse_headers(request_lines: str) -> dict:
     return headers
 
 
-def fetch_file_conents(dir: str, file: str) -> str:
+def fetch_file_contents(dir: str, file: str) -> str:
     filepath: str = dir + file
     contents: str = ""
     with open(filepath, 'r') as r:
