@@ -8,6 +8,7 @@ OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
 NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
 CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
 CONTENT_LENGTH_HEADER = "Content-Length: "
+CONTENT_TYPE_OCTET_STREAM_HEADER = "Content-Type: application/octet-stream"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', type=str)
@@ -57,12 +58,12 @@ def parse_request_path(decoded_request_str: str) -> str:
         return CRLF.join(response_headers) + response_body
 
     parsed_files_path = re.match("\/(files\/(.+))?", path)
-    print(f'Parsed path group: {parsed_path.group(0)}')
+    print(f'Parsed path group: {parsed_files_path.group(0)}')
 
     if parsed_files_path.group(2):
         print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
-        response_body = fetch_file_contents(args.directory, parsed_path.group(2))
-        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
+        response_body = fetch_file_contents(args.directory, parsed_files_path.group(2))
+        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_OCTET_STREAM_HEADER,
                             f'Content-Length: {len(response_body)}', str(), str()]
         return CRLF.join(response_headers) + response_body
 
