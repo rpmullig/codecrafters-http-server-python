@@ -7,14 +7,18 @@ CRLF = "\r\n"
 OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
 NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
 CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
-CONTENT_LENGTH_HEADER = "Content-Length: " 
+CONTENT_LENGTH_HEADER = "Content-Length: "
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--directory', type=str)
+args = parser.parse_args()
 
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
 
     while True:
-        client_socket, address = server_socket.accept() 
-        Thread(target=server_thread, args=(client_socket,)).start() 
+        client_socket, address = server_socket.accept()
+        Thread(target=server_thread, args=(client_socket,)).start()
 
 
 def server_thread(client_socket):
@@ -29,31 +33,41 @@ def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
     headers = parse_headers(lines)
-    print("Headers: ", headers) 
+    print("Headers: ", headers)
 
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
 
     if path == "/user-agent":
-        response_body = headers["User-Agent"]     
-        print("User agent found to be: ", headers["User-Agent"]) 
+        response_body = headers["User-Agent"]
+        print("User agent found to be: ", headers["User-Agent"])
         response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
                             f'Content-Length: {len(response_body)}', str(), str()]
- 
-        return CRLF.join(response_headers) + response_body 
 
-    parsed_path = re.match("\/(echo\/(.+))?", path)
+        return CRLF.join(response_headers) + response_body
+
+    parsed_echo_path = re.match("\/(echo\/(.+))?", path)
+    print(f'Parsed path group: {parsed_echo_path.group(0)}')
+
+    if parsed_echo_path.group(2):
+        print(f"Prased Path capture group return: {parsed_echo_path.group(2)}")
+        response_body = parsed_echo_path.group(2)
+        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
+                            f'Content-Length: {len(response_body)}', str(), str()]
+        return CRLF.join(response_headers) + response_body
+
+    parsed_files_path = re.match("\/(files\/(.+))?", path)
     print(f'Parsed path group: {parsed_path.group(0)}')
 
-    if parsed_path.group(2):
-        print(f"Prased Path capture group return: {parsed_path.group(2)}")
-        path_end = parsed_path.group(2)
-        response_body = parsed_path.group(2) 
+    if parsed_files_path.group(2):
+        print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
+        response_body = fetch_file_contents(args.directory, parsed_path.group(2))
         response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
                             f'Content-Length: {len(response_body)}', str(), str()]
-        return CRLF.join(response_headers) + response_body 
+        return CRLF.join(response_headers) + response_body
 
-    return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF 
+
+    return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF
 
 def parse_headers(request_lines: str) -> dict:
     i: int = 2
@@ -65,11 +79,12 @@ def parse_headers(request_lines: str) -> dict:
     return headers
 
 
+def fetch_file_conents(dir: str, file: str) -> str:
+    filepath: str = dir + file
+    contents: str = ""
+    with open(filepath, 'r') as r:
+        contents = r.read()
+    return contents
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--directory', type=str)
-    args = parser.parse_args()
-    print("Below are args")
-    print(args)
-    print(args["directory"])
     main()
