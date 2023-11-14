@@ -37,7 +37,7 @@ def parse_request_path(decoded_request_str: str) -> str:
     http_verb, path, protocol = lines[0].split(' ')
     headers, start_indx_body = parse_headers(lines)
     print("Headers: ", headers)
-    request_body = lines[start_indx_boyd:]
+    request_body = lines[start_indx_body:]
 
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
