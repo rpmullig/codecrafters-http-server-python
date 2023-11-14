@@ -5,8 +5,9 @@ import argparse
 import os
 
 CRLF = "\r\n"
-OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
 NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
+OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
+OK_201_HTTP_RESPONSE = "HTTP/1.1 201 OK"
 CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
 CONTENT_LENGTH_HEADER = "Content-Length: "
 CONTENT_TYPE_OCTET_STREAM_HEADER = "Content-Type: application/octet-stream"
@@ -34,8 +35,9 @@ def server_thread(client_socket):
 def parse_request_path(decoded_request_str: str) -> str:
     lines = decoded_request_str.split(CRLF)
     http_verb, path, protocol = lines[0].split(' ')
-    headers = parse_headers(lines)
+    headers, start_indx_body = parse_headers(lines)
     print("Headers: ", headers)
+    request_body = lines[start_indx_boyd:]
 
     if path == "/":
         return OK_HTTP_RESPONSE + CRLF + CRLF
@@ -61,7 +63,7 @@ def parse_request_path(decoded_request_str: str) -> str:
     parsed_files_path = re.match("\/(files\/(.+))?", path)
     print(f'Parsed path group: {parsed_files_path.group(0)}')
 
-    if parsed_files_path.group(2):
+    if parsed_files_path.group(2) and http_verb == "GET":
         print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
         if not os.path.exists(str(args.directory + parsed_files_path.group(2))):
             return  NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF
@@ -70,17 +72,24 @@ def parse_request_path(decoded_request_str: str) -> str:
                             f'Content-Length: {len(response_body)}', str(), str()]
         return CRLF.join(response_headers) + response_body
 
+    if parsed_files_path.group(2) and http_verb == "POST":
+        print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
+        with open(args.directory + parsed_files_path.group(2), 'w') as r:
+            r.write(request_body)
+        return OK_201_HTTP_RESPONSE + CRLF + CRLF
+
+
 
     return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF
 
-def parse_headers(request_lines: str) -> dict:
+def parse_headers(request_lines: str) -> (dict, int):
     i: int = 2
     headers = dict()
     while i < len(request_lines) and request_lines[i] != '':
         key, value = re.split(r':\s', request_lines[i])
         headers[key] = value
         i += 1
-    return headers
+    return headers, i
 
 
 def fetch_file_contents(dir: str, file: str) -> str:
