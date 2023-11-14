@@ -4,101 +4,92 @@ from threading import Thread
 import argparse
 import os
 
+# Constants
 CRLF = "\r\n"
-NOT_FOUND_HTTP_RESPONSE = "HTTP/1.1 404 Not Found"
-OK_HTTP_RESPONSE = "HTTP/1.1 200 OK"
-OK_201_HTTP_RESPONSE = "HTTP/1.1 201 OK"
-CONTENT_TYPE_TEXT_HEADER = "Content-type: text/plain"
-CONTENT_LENGTH_HEADER = "Content-Length: "
-CONTENT_TYPE_OCTET_STREAM_HEADER = "Content-Type: application/octet-stream"
+HTTP_404 = "HTTP/1.1 404 Not Found"
+HTTP_200 = "HTTP/1.1 200 OK"
+HTTP_201 = "HTTP/1.1 201 Created"
+CONTENT_TYPE_TEXT = "Content-type: text/plain"
+CONTENT_TYPE_OCTET_STREAM = "Content-Type: application/octet-stream"
+CONTENT_LENGTH = "Content-Length: "
 
+# Argument Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', type=str)
 args = parser.parse_args()
 
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-
     while True:
-        client_socket, address = server_socket.accept()
-        Thread(target=server_thread, args=(client_socket,)).start()
+        client_socket, _ = server_socket.accept()
+        Thread(target=handle_client, args=(client_socket,)).start()
 
+def handle_client(client_socket):
+    try:
+        request = client_socket.recv(1024).decode()
+        response = process_request(request)
+        client_socket.sendall(response.encode())
+    except Exception as e:
+        print(f"Error handling client: {e}")
+    finally:
+        client_socket.close()
 
-def server_thread(client_socket):
-    request = client_socket.recv(1024)
-    http_response = parse_request_path(request.decode())
-    client_socket.sendall(http_response.encode())
-    client_socket.close()
+def process_request(request: str) -> str:
+    try:
+        lines = request.split(CRLF)
+        verb, path, _ = lines[0].split()
+        headers, body_start = parse_headers(lines)
+        body = lines[body_start:]
 
+        if path == "/":
+            return format_response(HTTP_200)
 
+        elif path == "/user-agent":
+            return format_response(HTTP_200, CONTENT_TYPE_TEXT, headers.get("User-Agent", ""))
 
-def parse_request_path(decoded_request_str: str) -> str:
-    lines = decoded_request_str.split(CRLF)
-    http_verb, path, protocol = lines[0].split(' ')
-    headers, start_indx_body = parse_headers(lines)
-    print("Headers: ", headers)
-    request_body = lines[start_indx_body:]
+        elif match := re.match(r"/echo/(.*)", path):
+            return format_response(HTTP_200, CONTENT_TYPE_TEXT, match.group(1))
 
-    if path == "/":
-        return OK_HTTP_RESPONSE + CRLF + CRLF
+        elif match := re.match(r"/files/(.*)", path):
+            filepath = os.path.join(args.directory, match.group(1))
+            if verb == "GET":
+                return handle_file_get(filepath)
+            elif verb == "POST":
+                return handle_file_post(filepath, body)
 
-    if path == "/user-agent":
-        response_body = headers["User-Agent"]
-        print("User agent found to be: ", headers["User-Agent"])
-        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
-                            f'Content-Length: {len(response_body)}', str(), str()]
+    except Exception as e:
+        print(f"Error processing request: {e}")
 
-        return CRLF.join(response_headers) + response_body
+    return format_response(HTTP_404)
 
-    parsed_echo_path = re.match("\/(echo\/(.+))?", path)
-    print(f'Parsed path group: {parsed_echo_path.group(0)}')
-
-    if parsed_echo_path.group(2):
-        print(f"Prased Path capture group return: {parsed_echo_path.group(2)}")
-        response_body = parsed_echo_path.group(2)
-        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_TEXT_HEADER,
-                            f'Content-Length: {len(response_body)}', str(), str()]
-        return CRLF.join(response_headers) + response_body
-
-    parsed_files_path = re.match("\/(files\/(.+))?", path)
-    print(f'Parsed path group: {parsed_files_path.group(0)}')
-
-    if parsed_files_path.group(2) and http_verb == "GET":
-        print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
-        if not os.path.exists(str(args.directory + parsed_files_path.group(2))):
-            return  NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF
-        response_body = fetch_file_contents(args.directory, parsed_files_path.group(2))
-        response_headers = [OK_HTTP_RESPONSE, CONTENT_TYPE_OCTET_STREAM_HEADER,
-                            f'Content-Length: {len(response_body)}', str(), str()]
-        return CRLF.join(response_headers) + response_body
-
-    if parsed_files_path.group(2) and http_verb == "POST":
-        print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
-        with open(str(args.directory + parsed_files_path.group(2)), 'w') as r:
-            print(f'Trying to write {request_body}')
-            r.write(''.join(request_body))
-        return OK_201_HTTP_RESPONSE + CRLF + CRLF
-
-
-
-    return NOT_FOUND_HTTP_RESPONSE + CRLF + CRLF
-
-def parse_headers(request_lines: str) -> (dict, int):
-    i: int = 2
-    headers = dict()
-    while i < len(request_lines) and request_lines[i] != '':
-        key, value = re.split(r':\s', request_lines[i])
+def parse_headers(request_lines: list) -> (dict, int):
+    headers = {}
+    for i, line in enumerate(request_lines[1:], 1):
+        if line == '':
+            return headers, i + 1
+        key, value = re.split(r':\s', line, maxsplit=1)
         headers[key] = value
-        i += 1
     return headers, i
 
+def handle_file_get(filepath: str) -> str:
+    if not os.path.exists(filepath):
+        return format_response(HTTP_404)
+    with open(filepath, 'rb') as file:
+        content = file.read()
+        return format_response(HTTP_200, CONTENT_TYPE_OCTET_STREAM, content)
 
-def fetch_file_contents(dir: str, file: str) -> str:
-    filepath: str = dir + file
-    contents: str = ""
-    with open(filepath, 'r') as r:
-        contents = r.read()
-    return contents
+def handle_file_post(filepath: str, body: list) -> str:
+    with open(filepath, 'w') as file:
+        file.write(''.join(body))
+    return format_response(HTTP_201)
+
+def format_response(status: str, content_type: str = None, body: str = "") -> str:
+    headers = [status]
+    if content_type:
+        headers.append(content_type)
+        headers.append(f"{CONTENT_LENGTH}{len(body)}")
+    return CRLF.join(headers) + CRLF * 2 + body
 
 if __name__ == "__main__":
     main()
+
