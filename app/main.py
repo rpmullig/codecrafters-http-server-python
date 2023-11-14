@@ -74,7 +74,7 @@ def parse_headers(request_lines: list) -> (dict, int):
 def handle_file_get(filepath: str) -> str:
     if not os.path.exists(filepath):
         return format_response(HTTP_404)
-    with open(filepath, 'rb') as file:
+    with open(filepath, 'r') as file:
         content = file.read()
         return format_response(HTTP_200, CONTENT_TYPE_OCTET_STREAM, content)
 
