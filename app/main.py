@@ -74,7 +74,7 @@ def parse_request_path(decoded_request_str: str) -> str:
 
     if parsed_files_path.group(2) and http_verb == "POST":
         print(f"Prased Path capture group return: {parsed_files_path.group(2)}")
-        with open(args.directory + parsed_files_path.group(2), 'w') as r:
+        with open(str(args.directory + parsed_files_path.group(2)), 'w') as r:
             r.write(request_body)
         return OK_201_HTTP_RESPONSE + CRLF + CRLF
 
